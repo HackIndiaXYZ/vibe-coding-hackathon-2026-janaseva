@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { ClientOnly } from "@/components/client-only";
 import { analyzeImage, generateComplaint, submitReport } from "@/lib/reports.functions";
+import { MapContainer, TileLayer, Marker, useMapEvents, Recenter } from "@/components/leaflet-map";
 
 export const Route = createFileRoute("/app/report")({ component: ReportPage });
 
@@ -390,7 +391,6 @@ function ReportPage() {
 }
 
 function PinPicker({ coords, onSelect }: { coords: { lat: number; lng: number } | null; onSelect: (c: { lat: number; lng: number }) => void }) {
-  const { MapContainer, TileLayer, Marker, useMapEvents, Recenter } = require("@/components/leaflet-map") as typeof import("@/components/leaflet-map");
   const center = coords ?? { lat: 17.385, lng: 78.4867 }; // Hyderabad default
   function Clicker() {
     useMapEvents({ click(e) { onSelect({ lat: e.latlng.lat, lng: e.latlng.lng }); } });
