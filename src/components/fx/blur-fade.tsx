@@ -1,6 +1,11 @@
-import { motion } from "framer-motion";
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
+/**
+ * Blur + slide-up reveal that DEGRADES GRACEFULLY:
+ * server / no-JS / pre-hydration → fully visible.
+ * After mount we briefly hide and animate in, so the wow remains.
+ */
 export function BlurFade({
   children,
   delay = 0,
@@ -13,39 +18,47 @@ export function BlurFade({
   className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [shown, setShown] = useState(false);
+  // 0 = pre-hydration (visible), 1 = mounted reset (hidden), 2 = revealed
+  const [phase, setPhase] = useState<0 | 1 | 2>(0);
 
   useEffect(() => {
+    setPhase(1);
     const el = ref.current;
-    if (!el) return;
-    // Already visible on first paint? show immediately.
-    const rect = el.getBoundingClientRect();
-    if (rect.top < window.innerHeight && rect.bottom > 0) {
-      setShown(true);
+    if (!el) {
+      setPhase(2);
       return;
+    }
+    const reveal = () => setPhase(2);
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight * 0.95) {
+      const t = window.setTimeout(reveal, Math.max(0, delay * 1000));
+      return () => window.clearTimeout(t);
     }
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
-          setShown(true);
           io.disconnect();
+          window.setTimeout(reveal, Math.max(0, delay * 1000));
         }
       },
-      { rootMargin: "0px 0px -10% 0px" },
+      { rootMargin: "0px 0px -5% 0px" },
     );
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [delay]);
 
+  const hidden = phase === 1;
   return (
-    <motion.div
+    <div
       ref={ref}
-      initial={{ opacity: 0, y, filter: "blur(10px)" }}
-      animate={shown ? { opacity: 1, y: 0, filter: "blur(0px)" } : undefined}
-      transition={{ duration: 0.6, delay, ease: [0.21, 0.47, 0.32, 0.98] }}
-      className={className}
+      className={cn("transition-all duration-700 ease-out will-change-transform", className)}
+      style={{
+        opacity: hidden ? 0 : 1,
+        filter: hidden ? "blur(10px)" : "blur(0)",
+        transform: hidden ? `translateY(${y}px)` : "translateY(0)",
+      }}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
