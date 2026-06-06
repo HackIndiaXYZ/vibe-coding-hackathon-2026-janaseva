@@ -7,17 +7,18 @@ import { GridPattern } from "@/components/fx/grid-pattern";
 export function CTA() {
   return (
     <section className="px-4 pb-24 sm:px-6">
-      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] border border-border/60 bg-card/40 p-12 text-center shadow-glow sm:p-20">
-        <div className="absolute inset-0 -z-10 gradient-hero opacity-90 animate-gradient" />
+      <div className="relative mx-auto max-w-6xl overflow-hidden rounded-[2rem] border border-border/60 p-12 text-center shadow-glow sm:p-20">
+        <div className="absolute inset-0 -z-10 gradient-hero animate-gradient" />
+        <div className="absolute inset-0 -z-10 bg-black/30" />
         <GridPattern className="opacity-20" />
         <Meteors number={20} />
         <BorderBeam size={300} duration={10} />
-        <h3 className="font-display text-balance text-4xl font-bold tracking-tight text-primary-foreground sm:text-5xl">
+        <h3 className="font-display text-balance text-4xl font-bold tracking-tight text-white sm:text-5xl">
           Your city deserves better.
           <br />
           Start today.
         </h3>
-        <p className="mx-auto mt-4 max-w-xl text-pretty text-base text-primary-foreground/85 sm:text-lg">
+        <p className="mx-auto mt-4 max-w-xl text-pretty text-base text-white/85 sm:text-lg">
           Join 12,000+ citizens turning broken streetlights, potholes and overflowing drains into closed-loop resolutions.
         </p>
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -30,12 +31,12 @@ export function CTA() {
           </Link>
           <Link
             to="/community"
-            className="inline-flex h-12 items-center rounded-full border border-primary-foreground/30 bg-background/10 px-6 text-sm font-medium text-primary-foreground backdrop-blur transition-colors hover:bg-background/20"
+            className="inline-flex h-12 items-center rounded-full border border-white/30 bg-white/10 px-6 text-sm font-medium text-white backdrop-blur transition-colors hover:bg-white/20"
           >
             Explore Community Pulse
           </Link>
         </div>
-        <p className="mt-5 text-xs text-primary-foreground/70">Free forever for citizens · No credit card</p>
+        <p className="mt-5 text-xs text-white/70">Free forever for citizens · No credit card</p>
       </div>
     </section>
   );
