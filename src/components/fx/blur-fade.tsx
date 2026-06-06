@@ -1,0 +1,28 @@
+import { motion, useInView } from "framer-motion";
+import { useRef, type ReactNode } from "react";
+
+export function BlurFade({
+  children,
+  delay = 0,
+  y = 12,
+  className,
+}: {
+  children: ReactNode;
+  delay?: number;
+  y?: number;
+  className?: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y, filter: "blur(10px)" }}
+      animate={inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : undefined}
+      transition={{ duration: 0.6, delay, ease: [0.21, 0.47, 0.32, 0.98] }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
