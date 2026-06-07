@@ -15,7 +15,7 @@ import {
 import { ClientOnly } from "@/components/client-only";
 import { analyzeImage, generateComplaint, submitReport } from "@/lib/reports.functions";
 import { MapContainer, TileLayer, Marker, useMapEvents, Recenter } from "@/components/leaflet-map";
-import { MapSearch, type GeoResult } from "@/components/map-search";
+import { MapSearch } from "@/components/map-search";
 
 export const Route = createFileRoute("/app/report")({ component: ReportPage });
 
