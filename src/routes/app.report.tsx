@@ -221,6 +221,14 @@ function ReportPage() {
                   </Badge>
                 )}
               </div>
+              <div className="mt-3">
+                <MapSearch
+                  onSelect={(r) => {
+                    setCoords({ lat: r.lat, lng: r.lng });
+                    setAddress(r.label);
+                  }}
+                />
+              </div>
               <div className="mt-4 h-72 overflow-hidden rounded-2xl border">
                 <ClientOnly fallback={<div className="grid h-full place-items-center text-sm text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /></div>}>
                   <PinPicker coords={coords} onSelect={setCoords} />
