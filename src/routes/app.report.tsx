@@ -13,7 +13,7 @@ import {
   Camera, MapPin, Brain, Building2, FileText, Send, Upload, Loader2, ArrowRight, ArrowLeft, RefreshCw, Languages, Copy, CheckCircle2,
 } from "lucide-react";
 import { ClientOnly } from "@/components/client-only";
-import { analyzeImage, generateComplaint, submitReport } from "@/lib/reports.functions";
+import { analyzeImage, generateComplaint, submitReport, findSimilarAndScore } from "@/lib/reports.functions";
 import { MapContainer, TileLayer, Marker, useMapEvents, Recenter } from "@/components/leaflet-map";
 import { MapSearch } from "@/components/map-search";
 
@@ -21,6 +21,15 @@ export const Route = createFileRoute("/app/report")({ component: ReportPage });
 
 type Severity = "low" | "medium" | "high";
 type Analysis = { issue_type: string; severity: Severity; description: string; authority: { name: string; contact: string; jurisdiction: string } };
+type Impact = {
+  similarCount: number;
+  nearbyAll: number;
+  nearestMeters: number | null;
+  impactScore: number;
+  riskLabel: string;
+  affectedLabel: string;
+  factors: { severity: number; nearby: number; density: number; issueType: number };
+};
 
 const STEPS = [
   { id: 1, label: "Upload", icon: Upload },
@@ -36,6 +45,7 @@ function ReportPage() {
   const analyzeFn = useServerFn(analyzeImage);
   const generateFn = useServerFn(generateComplaint);
   const submitFn = useServerFn(submitReport);
+  const impactFn = useServerFn(findSimilarAndScore);
 
   const [step, setStep] = useState(1);
   const [image, setImage] = useState<string | null>(null);
@@ -43,6 +53,7 @@ function ReportPage() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [address, setAddress] = useState("");
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
+  const [impact, setImpact] = useState<Impact | null>(null);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
@@ -64,6 +75,22 @@ function ReportPage() {
     try {
       const a = (await analyzeFn({ data: { imageBase64: image } })) as Analysis;
       setAnalysis(a);
+      if (coords) {
+        try {
+          const im = (await impactFn({
+            data: {
+              latitude: coords.lat,
+              longitude: coords.lng,
+              issueType: a.issue_type,
+              severity: a.severity,
+              radiusMeters: 1000,
+            },
+          })) as Impact;
+          setImpact(im);
+        } catch {
+          setImpact(null);
+        }
+      }
       setStep(4);
     } catch (e) {
       toast.error((e as Error).message);
@@ -234,10 +261,12 @@ function ReportPage() {
                   <PinPicker coords={coords} onSelect={setCoords} />
                 </ClientOnly>
               </div>
-              <div className="mt-4">
-                <Label htmlFor="addr">Address / landmark (optional)</Label>
-                <Input id="addr" placeholder="e.g. Near Hitech City Metro" value={address} onChange={(e) => setAddress(e.target.value)} className="mt-1 rounded-xl" />
-              </div>
+              {address && (
+                <div className="mt-3 flex items-center gap-2 rounded-xl border bg-muted/30 px-3 py-2 text-sm">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  <span className="truncate text-muted-foreground">{address}</span>
+                </div>
+              )}
               <div className="mt-6 flex justify-between">
                 <Button variant="ghost" onClick={() => setStep(1)}><ArrowLeft className="mr-1 h-4 w-4" /> Back</Button>
                 <Button onClick={() => setStep(3)} disabled={!coords} className="rounded-full gradient-primary text-primary-foreground">
@@ -278,23 +307,13 @@ function ReportPage() {
           {step === 4 && analysis && (
             <motion.div key="4" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="space-y-5">
               <div>
-                <h2 className="text-xl font-semibold">AI identified the issue</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Review the analysis and authority routing below.</p>
+                <h2 className="text-xl font-semibold">AI Impact Analysis</h2>
+                <p className="mt-1 text-sm text-muted-foreground">A live, AI-generated assessment of this issue's reach.</p>
               </div>
-              <Card className="grid gap-4 rounded-2xl border bg-card/60 p-5 md:grid-cols-[200px_1fr]">
-                {image && <img src={image} alt="report" className="h-40 w-full rounded-xl object-cover" />}
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge className="rounded-full gradient-primary text-primary-foreground">{analysis.issue_type}</Badge>
-                    <Badge variant="secondary" className={`rounded-full capitalize ${
-                      analysis.severity === "high" ? "bg-destructive/15 text-destructive" :
-                      analysis.severity === "medium" ? "bg-warning/15 text-warning-foreground" :
-                      "bg-success/15 text-success"
-                    }`}>{analysis.severity} severity</Badge>
-                  </div>
-                  <p className="text-sm text-foreground">{analysis.description}</p>
-                </div>
-              </Card>
+              <ImpactCard analysis={analysis} impact={impact} image={image} />
+              {impact && (
+                <SimilarCard impact={impact} issueType={analysis.issue_type} />
+              )}
               <Card className="rounded-2xl border bg-card/60 p-5">
                 <div className="flex items-center gap-3">
                   <div className="grid h-12 w-12 place-items-center rounded-xl gradient-primary text-primary-foreground">
