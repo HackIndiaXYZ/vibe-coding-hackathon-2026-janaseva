@@ -194,3 +194,95 @@ export const toggleSupport = createServerFn({ method: "POST" })
     if (ins.error) throw new Error(ins.error.message);
     return { supported: true };
   });
+
+const similarSchema = z.object({
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+  issueType: z.string().min(1).max(200),
+  severity: z.enum(["low", "medium", "high"]),
+  radiusMeters: z.number().min(100).max(5000).default(1000),
+});
+
+function haversine(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371000;
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+export const findSimilarAndScore = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => similarSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Bounding box ~ radius
+    const dLat = data.radiusMeters / 111_000;
+    const dLng = data.radiusMeters / (111_000 * Math.cos((data.latitude * Math.PI) / 180));
+    const r = await supabaseAdmin
+      .from("reports")
+      .select("id,issue_type,severity,latitude,longitude,support_count,created_at")
+      .gte("latitude", data.latitude - dLat)
+      .lte("latitude", data.latitude + dLat)
+      .gte("longitude", data.longitude - dLng)
+      .lte("longitude", data.longitude + dLng)
+      .limit(500);
+    if (r.error) throw new Error(r.error.message);
+    const rows = (r.data ?? []).map((row) => ({
+      ...row,
+      distance: haversine(data.latitude, data.longitude, row.latitude, row.longitude),
+    }));
+    const within = rows.filter((row) => row.distance <= data.radiusMeters);
+    const typeMatch = within.filter(
+      (row) => row.issue_type.toLowerCase() === data.issueType.toLowerCase(),
+    );
+    const nearest = typeMatch.length
+      ? typeMatch.reduce((a, b) => (a.distance < b.distance ? a : b))
+      : null;
+    const nearbyAll = within.length;
+
+    // Impact score (0-100)
+    const sevScore = data.severity === "high" ? 40 : data.severity === "medium" ? 26 : 14;
+    const nearbyScore = Math.min(30, typeMatch.length * 3 + Math.floor(nearbyAll / 3));
+    // Population density proxy: more reports in a 5km box = denser area
+    const density = rows.length;
+    const densityScore = Math.min(15, Math.floor(density / 4));
+    const typeWeight: Record<string, number> = {
+      pothole: 15,
+      "water logging": 15,
+      sewage: 15,
+      "sewage overflow": 15,
+      "broken streetlight": 12,
+      "garbage dump": 12,
+      "stray animals": 10,
+      encroachment: 10,
+      "illegal parking": 8,
+    };
+    const typeScore = typeWeight[data.issueType.toLowerCase()] ?? 10;
+    const impactScore = Math.min(100, sevScore + nearbyScore + densityScore + typeScore);
+    const riskLabel =
+      impactScore >= 75 ? "High Risk" : impactScore >= 50 ? "Medium Risk" : "Low Risk";
+    // Affected citizens estimate
+    const base = data.severity === "high" ? 300 : data.severity === "medium" ? 120 : 40;
+    const affected = base + nearbyAll * 35 + density * 5;
+    const affectedLabel =
+      affected >= 1000 ? "1000+" : affected >= 500 ? "500+" : affected >= 200 ? "200+" : `${Math.max(20, Math.round(affected / 10) * 10)}+`;
+
+    return {
+      similarCount: typeMatch.length,
+      nearbyAll,
+      nearestMeters: nearest ? Math.round(nearest.distance) : null,
+      impactScore,
+      riskLabel,
+      affectedLabel,
+      factors: {
+        severity: sevScore,
+        nearby: nearbyScore,
+        density: densityScore,
+        issueType: typeScore,
+      },
+    };
+  });
