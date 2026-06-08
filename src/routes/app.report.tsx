@@ -13,7 +13,7 @@ import {
   Camera, MapPin, Brain, Building2, FileText, Send, Upload, Loader2, ArrowRight, ArrowLeft, RefreshCw, Languages, Copy, CheckCircle2,
 } from "lucide-react";
 import { ClientOnly } from "@/components/client-only";
-import { analyzeImage, generateComplaint, submitReport } from "@/lib/reports.functions";
+import { analyzeImage, generateComplaint, submitReport, findSimilarAndScore } from "@/lib/reports.functions";
 import { MapContainer, TileLayer, Marker, useMapEvents, Recenter } from "@/components/leaflet-map";
 import { MapSearch } from "@/components/map-search";
 
@@ -21,6 +21,15 @@ export const Route = createFileRoute("/app/report")({ component: ReportPage });
 
 type Severity = "low" | "medium" | "high";
 type Analysis = { issue_type: string; severity: Severity; description: string; authority: { name: string; contact: string; jurisdiction: string } };
+type Impact = {
+  similarCount: number;
+  nearbyAll: number;
+  nearestMeters: number | null;
+  impactScore: number;
+  riskLabel: string;
+  affectedLabel: string;
+  factors: { severity: number; nearby: number; density: number; issueType: number };
+};
 
 const STEPS = [
   { id: 1, label: "Upload", icon: Upload },
@@ -36,6 +45,7 @@ function ReportPage() {
   const analyzeFn = useServerFn(analyzeImage);
   const generateFn = useServerFn(generateComplaint);
   const submitFn = useServerFn(submitReport);
+  const impactFn = useServerFn(findSimilarAndScore);
 
   const [step, setStep] = useState(1);
   const [image, setImage] = useState<string | null>(null);
@@ -43,6 +53,7 @@ function ReportPage() {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [address, setAddress] = useState("");
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
+  const [impact, setImpact] = useState<Impact | null>(null);
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const [busy, setBusy] = useState(false);
@@ -64,6 +75,22 @@ function ReportPage() {
     try {
       const a = (await analyzeFn({ data: { imageBase64: image } })) as Analysis;
       setAnalysis(a);
+      if (coords) {
+        try {
+          const im = (await impactFn({
+            data: {
+              latitude: coords.lat,
+              longitude: coords.lng,
+              issueType: a.issue_type,
+              severity: a.severity,
+              radiusMeters: 1000,
+            },
+          })) as Impact;
+          setImpact(im);
+        } catch {
+          setImpact(null);
+        }
+      }
       setStep(4);
     } catch (e) {
       toast.error((e as Error).message);
@@ -234,10 +261,12 @@ function ReportPage() {
                   <PinPicker coords={coords} onSelect={setCoords} />
                 </ClientOnly>
               </div>
-              <div className="mt-4">
-                <Label htmlFor="addr">Address / landmark (optional)</Label>
-                <Input id="addr" placeholder="e.g. Near Hitech City Metro" value={address} onChange={(e) => setAddress(e.target.value)} className="mt-1 rounded-xl" />
-              </div>
+              {address && (
+                <div className="mt-3 flex items-center gap-2 rounded-xl border bg-muted/30 px-3 py-2 text-sm">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  <span className="truncate text-muted-foreground">{address}</span>
+                </div>
+              )}
               <div className="mt-6 flex justify-between">
                 <Button variant="ghost" onClick={() => setStep(1)}><ArrowLeft className="mr-1 h-4 w-4" /> Back</Button>
                 <Button onClick={() => setStep(3)} disabled={!coords} className="rounded-full gradient-primary text-primary-foreground">
@@ -278,23 +307,13 @@ function ReportPage() {
           {step === 4 && analysis && (
             <motion.div key="4" initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} className="space-y-5">
               <div>
-                <h2 className="text-xl font-semibold">AI identified the issue</h2>
-                <p className="mt-1 text-sm text-muted-foreground">Review the analysis and authority routing below.</p>
+                <h2 className="text-xl font-semibold">AI Impact Analysis</h2>
+                <p className="mt-1 text-sm text-muted-foreground">A live, AI-generated assessment of this issue's reach.</p>
               </div>
-              <Card className="grid gap-4 rounded-2xl border bg-card/60 p-5 md:grid-cols-[200px_1fr]">
-                {image && <img src={image} alt="report" className="h-40 w-full rounded-xl object-cover" />}
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge className="rounded-full gradient-primary text-primary-foreground">{analysis.issue_type}</Badge>
-                    <Badge variant="secondary" className={`rounded-full capitalize ${
-                      analysis.severity === "high" ? "bg-destructive/15 text-destructive" :
-                      analysis.severity === "medium" ? "bg-warning/15 text-warning-foreground" :
-                      "bg-success/15 text-success"
-                    }`}>{analysis.severity} severity</Badge>
-                  </div>
-                  <p className="text-sm text-foreground">{analysis.description}</p>
-                </div>
-              </Card>
+              <ImpactCard analysis={analysis} impact={impact} image={image} />
+              {impact && (
+                <SimilarCard impact={impact} issueType={analysis.issue_type} />
+              )}
               <Card className="rounded-2xl border bg-card/60 p-5">
                 <div className="flex items-center gap-3">
                   <div className="grid h-12 w-12 place-items-center rounded-xl gradient-primary text-primary-foreground">
@@ -413,4 +432,142 @@ function PinPicker({ coords, onSelect }: { coords: { lat: number; lng: number } 
       <Clicker />
     </MapContainer>
   );
+}
+
+function ImpactCard({
+  analysis,
+  impact,
+  image,
+}: {
+  analysis: Analysis;
+  impact: Impact | null;
+  image: string | null;
+}) {
+  const score = impact?.impactScore ?? 0;
+  const tone =
+    score >= 75
+      ? "from-destructive to-warning"
+      : score >= 50
+        ? "from-warning to-primary"
+        : "from-primary to-success";
+  const ring =
+    score >= 75 ? "stroke-destructive" : score >= 50 ? "stroke-warning" : "stroke-success";
+  const circumference = 2 * Math.PI * 42;
+  const offset = circumference - (score / 100) * circumference;
+  return (
+    <Card className="grid gap-5 rounded-2xl border bg-card/60 p-5 md:grid-cols-[180px_1fr]">
+      {image && <img src={image} alt="report" className="h-40 w-full rounded-xl object-cover" />}
+      <div className="space-y-4">
+        <div className="flex items-center gap-4">
+          <div className="relative h-28 w-28 shrink-0">
+            <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
+              <circle cx="50" cy="50" r="42" className="fill-none stroke-muted" strokeWidth="8" />
+              <motion.circle
+                cx="50"
+                cy="50"
+                r="42"
+                className={`fill-none ${ring}`}
+                strokeWidth="8"
+                strokeLinecap="round"
+                strokeDasharray={circumference}
+                initial={{ strokeDashoffset: circumference }}
+                animate={{ strokeDashoffset: impact ? offset : circumference }}
+                transition={{ duration: 1.2, ease: "easeOut" }}
+              />
+            </svg>
+            <div className="absolute inset-0 grid place-items-center">
+              <div className="text-center">
+                <div className={`bg-gradient-to-br ${tone} bg-clip-text text-2xl font-bold leading-none text-transparent`}>
+                  {impact ? score : "—"}
+                </div>
+                <div className="text-[10px] text-muted-foreground">/ 100</div>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Impact Score</div>
+            <div className="text-2xl font-bold tracking-tight">{impact?.riskLabel ?? "Calculating…"}</div>
+            <div className="text-sm text-muted-foreground">
+              {impact ? <>Est. citizens affected: <span className="font-semibold text-foreground">{impact.affectedLabel}</span></> : "Analyzing community signals"}
+            </div>
+          </div>
+        </div>
+        <div>
+          <div className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">Generated from</div>
+          <div className="flex flex-wrap gap-1.5">
+            <Factor label="Severity" value={impact?.factors.severity ?? 0} max={40} />
+            <Factor label="Nearby reports" value={impact?.factors.nearby ?? 0} max={30} />
+            <Factor label="Population density" value={impact?.factors.density ?? 0} max={15} />
+            <Factor label="Issue type" value={impact?.factors.issueType ?? 0} max={15} />
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 border-t pt-3">
+          <Badge variant="secondary" className="rounded-full">{analysis.issue_type}</Badge>
+          <Badge variant="secondary" className={`rounded-full capitalize ${
+            analysis.severity === "high" ? "bg-destructive/15 text-destructive" :
+            analysis.severity === "medium" ? "bg-warning/15 text-warning-foreground" :
+            "bg-success/15 text-success"
+          }`}>{analysis.severity} severity</Badge>
+          <span className="text-xs text-muted-foreground">{analysis.description}</span>
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+function Factor({ label, value, max }: { label: string; value: number; max: number }) {
+  const pct = Math.round((value / max) * 100);
+  return (
+    <div className="flex items-center gap-1.5 rounded-full border bg-background/60 px-2.5 py-1 text-xs">
+      <CheckCircle2 className="h-3 w-3 text-success" />
+      <span className="font-medium">{label}</span>
+      <span className="text-muted-foreground">{pct}%</span>
+    </div>
+  );
+}
+
+function SimilarCard({ impact, issueType }: { impact: Impact; issueType: string }) {
+  if (impact.similarCount === 0 && impact.nearbyAll === 0) {
+    return (
+      <Card className="flex items-center gap-3 rounded-2xl border bg-card/60 p-5">
+        <div className="grid h-10 w-10 place-items-center rounded-xl bg-success/15 text-success">
+          <CheckCircle2 className="h-5 w-5" />
+        </div>
+        <div className="text-sm">
+          <div className="font-semibold">You're the first to report this here</div>
+          <div className="text-muted-foreground">No similar reports nearby in the last scan.</div>
+        </div>
+      </Card>
+    );
+  }
+  return (
+    <Card className="rounded-2xl border bg-card/60 p-5">
+      <div className="flex items-center gap-4">
+        <div className="relative grid h-12 w-12 place-items-center rounded-xl gradient-primary text-primary-foreground shadow-glow">
+          <span className="text-lg font-bold">{impact.similarCount || impact.nearbyAll}</span>
+          <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full bg-success">
+            <span className="absolute inset-0 animate-ping rounded-full bg-success/60" />
+          </span>
+        </div>
+        <div className="flex-1">
+          <div className="text-base font-semibold">
+            {impact.similarCount} similar “{issueType}” reports nearby
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {impact.nearestMeters !== null ? (
+              <>Nearest: <span className="font-medium text-foreground">{formatDistance(impact.nearestMeters)}</span> away</>
+            ) : (
+              <>{impact.nearbyAll} other civic reports within 1 km</>
+            )}
+          </div>
+        </div>
+        <Badge variant="secondary" className="rounded-full bg-primary/15 text-primary">Verified by community</Badge>
+      </div>
+    </Card>
+  );
+}
+
+function formatDistance(m: number) {
+  if (m < 1000) return `${m} m`;
+  return `${(m / 1000).toFixed(1)} km`;
 }
