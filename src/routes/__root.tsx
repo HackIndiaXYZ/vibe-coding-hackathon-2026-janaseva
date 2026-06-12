@@ -85,9 +85,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "AI-powered civic reporting. Snap a photo, let AI write the complaint, route it to the right authority, and rally your community." },
       { name: "author", content: "JanaSeva AI" },
       { property: "og:title", content: "JanaSeva AI — From Complaint to Resolution" },
-      { property: "og:description", content: "AI-powered civic reporting. Snap a photo, let AI write the complaint, route it to the right authority." },
+      { property: "og:description", content: "AI-powered civic reporting. Snap a photo, let AI write the complaint, route it to the right authority, and rally your community." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "JanaSeva AI — From Complaint to Resolution" },
+      { name: "twitter:description", content: "AI-powered civic reporting. Snap a photo, let AI write the complaint, route it to the right authority, and rally your community." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1bcf8fde-d3e5-4744-9247-84e9f974e9ed/id-preview-bfec19e7--aee261ad-1f36-48f3-bd99-193c91a4f615.lovable.app-1781289282941.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1bcf8fde-d3e5-4744-9247-84e9f974e9ed/id-preview-bfec19e7--aee261ad-1f36-48f3-bd99-193c91a4f615.lovable.app-1781289282941.png" },
     ],
     links: [
       {
