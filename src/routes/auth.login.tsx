@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/auth/login")({
-  head: () => ({ meta: [{ title: "Sign in to JanMitra AI" }] }),
+  head: () => ({ meta: [{ title: "Sign in to JanaSeva AI" }] }),
   component: LoginPage,
 });
 

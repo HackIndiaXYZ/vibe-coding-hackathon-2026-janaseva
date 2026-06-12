@@ -18,7 +18,7 @@ type NominatimItem = {
   address?: Record<string, string>;
 };
 
-const RECENTS_KEY = "janmitra:recent-places";
+const RECENTS_KEY = "janaseva:recent-places";
 const MAX_RECENTS = 5;
 
 function loadRecents(): GeoResult[] {

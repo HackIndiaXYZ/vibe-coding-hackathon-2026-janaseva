@@ -9,7 +9,7 @@ export function Brand({ className = "" }: { className?: string }) {
         <Sparkles className="relative h-5 w-5 text-primary-foreground" />
       </span>
       <span className="font-display text-lg font-bold tracking-tight">
-        JanMitra<span className="gradient-text"> AI</span>
+        JanaSeva<span className="gradient-text"> AI</span>
       </span>
     </Link>
   );
