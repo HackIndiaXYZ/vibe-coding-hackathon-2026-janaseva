@@ -61,7 +61,8 @@ function ReportPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function onFile(file: File) {
-    if (!file.type.startsWith("image/")) return toast.error("Please upload an image");
+    const ALLOWED = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!ALLOWED.includes(file.type)) return toast.error("Please upload a JPEG, PNG, GIF, or WebP image");
     if (file.size > 8_000_000) return toast.error("Image too large (max 8MB)");
     setContentType(file.type);
     const reader = new FileReader();
