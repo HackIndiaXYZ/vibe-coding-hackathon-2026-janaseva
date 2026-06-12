@@ -10,7 +10,7 @@ import { motion } from "framer-motion";
 
 export const Route = createFileRoute("/auth/verify")({
   validateSearch: z.object({ email: z.string().email().optional() }),
-  head: () => ({ meta: [{ title: "Verify your email — JanMitra AI" }] }),
+  head: () => ({ meta: [{ title: "Verify your email — JanaSeva AI" }] }),
   component: VerifyPage,
 });
 

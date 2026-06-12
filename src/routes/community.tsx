@@ -14,9 +14,9 @@ export const Route = createFileRoute("/community")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Community Pulse — JanMitra AI" },
+      { title: "Community Pulse — JanaSeva AI" },
       { name: "description", content: "Live map of civic issues reported across Telangana — see what's broken and rally support." },
-      { property: "og:title", content: "Community Pulse — JanMitra AI" },
+      { property: "og:title", content: "Community Pulse — JanaSeva AI" },
       { property: "og:description", content: "See live civic reports across your community." },
     ],
   }),
@@ -46,7 +46,7 @@ function PublicCommunity() {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-4xl font-bold tracking-tight">Community Pulse</h1>
-            <p className="mt-2 max-w-2xl text-muted-foreground">A live, public map of every civic issue reported through JanMitra AI.</p>
+            <p className="mt-2 max-w-2xl text-muted-foreground">A live, public map of every civic issue reported through JanaSeva AI.</p>
           </div>
           <div className="flex items-center gap-2 rounded-full border bg-card/60 px-3 py-1.5 text-xs font-medium">
             <span className="relative flex h-2 w-2">

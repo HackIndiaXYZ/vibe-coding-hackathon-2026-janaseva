@@ -81,10 +81,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "JanMitra AI — From Complaint to Resolution" },
+      { title: "JanaSeva AI — From Complaint to Resolution" },
       { name: "description", content: "AI-powered civic reporting. Snap a photo, let AI write the complaint, route it to the right authority, and rally your community." },
-      { name: "author", content: "JanMitra AI" },
-      { property: "og:title", content: "JanMitra AI — From Complaint to Resolution" },
+      { name: "author", content: "JanaSeva AI" },
+      { property: "og:title", content: "JanaSeva AI — From Complaint to Resolution" },
       { property: "og:description", content: "AI-powered civic reporting. Snap a photo, let AI write the complaint, route it to the right authority." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

@@ -4,7 +4,7 @@ import { Star } from "lucide-react";
 
 const QUOTES = [
   { name: "Priya Sharma", role: "Resident, Hyderabad", text: "I reported a broken streetlight in 30 seconds. TSSPDCL fixed it within 48 hours. This is the future of civic engagement." },
-  { name: "Arjun Reddy", role: "Community organizer", text: "We rallied 200 neighbours through Community Pulse to fix a dangerous pothole. JanMitra made it effortless." },
+  { name: "Arjun Reddy", role: "Community organizer", text: "We rallied 200 neighbours through Community Pulse to fix a dangerous pothole. JanaSeva made it effortless." },
   { name: "Lakshmi Devi", role: "Senior citizen", text: "The AI writes my complaints in Telugu. I don't have to ask anyone for help anymore. Truly empowering." },
   { name: "Vikram Iyer", role: "RWA President, Banjara Hills", text: "We track 40+ complaints a month. The authority routing alone saves us hours of guesswork." },
   { name: "Sana Khan", role: "Student, Osmania University", text: "Snap, submit, done. I logged 6 issues on my street in one walk home. Real change happens." },

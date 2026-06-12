@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/auth/reset-password")({
-  head: () => ({ meta: [{ title: "Reset your password — JanMitra AI" }] }),
+  head: () => ({ meta: [{ title: "Reset your password — JanaSeva AI" }] }),
   component: ResetPage,
 });
 

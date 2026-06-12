@@ -11,9 +11,9 @@ import { ScrollProgress } from "@/components/fx/scroll-progress";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "JanMitra AI — From Complaint to Resolution" },
+      { title: "JanaSeva AI — From Complaint to Resolution" },
       { name: "description", content: "AI-powered civic reporting. Snap a photo, let AI write the complaint, route it to the right Telangana authority, rally your community." },
-      { property: "og:title", content: "JanMitra AI — From Complaint to Resolution" },
+      { property: "og:title", content: "JanaSeva AI — From Complaint to Resolution" },
       { property: "og:description", content: "Upload a photo. Let AI identify the issue, generate a complaint, find the right authority." },
     ],
   }),

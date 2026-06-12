@@ -33,7 +33,7 @@ export function AuthShell({
         </div>
         {footer && <div className="mt-5 text-center text-sm text-muted-foreground">{footer}</div>}
         <p className="mt-8 text-center text-xs text-muted-foreground">
-          By continuing you agree to JanMitra AI's{" "}
+          By continuing you agree to JanaSeva AI's{" "}
           <Link to="/" className="underline">Terms</Link> and{" "}
           <Link to="/" className="underline">Privacy Policy</Link>.
         </p>

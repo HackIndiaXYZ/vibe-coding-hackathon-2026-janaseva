@@ -17,7 +17,7 @@ export function Features() {
               Everything you need <span className="gradient-text">to be heard.</span>
             </h2>
             <p className="mt-4 text-pretty text-lg text-muted-foreground">
-              JanMitra AI compresses an hour of paperwork into a single tap — without losing the rigor of an official complaint.
+              JanaSeva AI compresses an hour of paperwork into a single tap — without losing the rigor of an official complaint.
             </p>
           </div>
         </BlurFade>

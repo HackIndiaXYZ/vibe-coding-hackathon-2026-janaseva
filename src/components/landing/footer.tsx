@@ -9,7 +9,7 @@ export function LandingFooter() {
           <div className="md:col-span-2">
             <Brand />
             <p className="mt-4 max-w-md text-sm text-muted-foreground">
-              JanMitra AI turns a single photo into a routed civic complaint — so citizens spend seconds, not hours,
+              JanaSeva AI turns a single photo into a routed civic complaint — so citizens spend seconds, not hours,
               fixing what's broken around them.
             </p>
           </div>
@@ -31,7 +31,7 @@ export function LandingFooter() {
           </div>
         </div>
         <div className="mt-10 flex flex-col items-start justify-between gap-3 border-t pt-6 text-xs text-muted-foreground sm:flex-row">
-          <span>© {new Date().getFullYear()} JanMitra AI. From complaint to resolution.</span>
+          <span>© {new Date().getFullYear()} JanaSeva AI. From complaint to resolution.</span>
           <span>Built for citizens of Telangana.</span>
         </div>
       </div>

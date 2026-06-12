@@ -12,7 +12,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/auth/signup")({
-  head: () => ({ meta: [{ title: "Create your JanMitra AI account" }, { name: "description", content: "Sign up to report civic issues with AI." }] }),
+  head: () => ({ meta: [{ title: "Create your JanaSeva AI account" }, { name: "description", content: "Sign up to report civic issues with AI." }] }),
   component: SignupPage,
 });
 
