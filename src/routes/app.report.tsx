@@ -197,7 +197,7 @@ function ReportPage() {
               <input
                 ref={inputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/png,image/gif,image/webp"
                 className="hidden"
                 onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])}
               />
