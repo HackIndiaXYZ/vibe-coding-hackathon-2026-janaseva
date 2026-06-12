@@ -105,8 +105,18 @@ export const submitReport = createServerFn({ method: "POST" })
     const m = /^data:([^;]+);base64,(.+)$/.exec(data.imageBase64);
     if (!m) throw new Error("Invalid image data");
     const contentType = m[1];
+    const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!ALLOWED_TYPES.includes(contentType)) {
+      throw new Error("Unsupported image type. Please upload a JPEG, PNG, GIF, or WebP image.");
+    }
     const bytes = Uint8Array.from(atob(m[2]), (c) => c.charCodeAt(0));
-    const ext = contentType.split("/")[1]?.split("+")[0] ?? "jpg";
+    const extMap: Record<string, string> = {
+      "image/jpeg": "jpg",
+      "image/png": "png",
+      "image/gif": "gif",
+      "image/webp": "webp",
+    };
+    const ext = extMap[contentType];
     const path = `${context.userId}/${crypto.randomUUID()}.${ext}`;
     const up = await supabaseAdmin.storage
       .from("report-images")
